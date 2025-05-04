@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Measurement API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, textarea, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+        }
+        .response {
+            margin-top: 20px;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Measurement API</h1>
+
+    <!-- Get All Measurements -->
+    <div class="container">
+        <h2>Get All Measurements</h2>
+        <button onclick="getMeasurements()">Get All Measurements</button>
+        <div id="all-measurements"></div>
+    </div>
+
+    <!-- Get Specific Measurement -->
+    <div class="container">
+        <h2>Get Specific Measurement</h2>
+        <label for="get-id">Measurement ID:</label>
+        <input type="text" id="get-id" placeholder="e.g. temperature">
+        <label for="get-date">Date (Optional):</label>
+        <input type="text" id="get-date" placeholder="e.g. 2025-03-30">
+        <button onclick="getSpecificMeasurement()">Get Measurement</button>
+        <div id="specific-measurement"></div>
+    </div>
+
+    <!-- Add New Collection of Measurements -->
+    <div class="container">
+        <h2>Add New Collection of Measurements</h2>
+        <label for="add-measurements-id">Measurement ID:</label>
+        <input type="text" id="add-measurements-id" placeholder="e.g. temperature, humidity, CO2">
+        <label for="add-measurements-value">Value:</label>
+        <input type="number" id="add-measurements-value" placeholder="e.g. 23.5">
+        <label for="add-measurements-date">Date (yyyy-mm-dd):</label>
+        <input type="text" id="add-measurements-date" placeholder="e.g. 2025-04-01">
+        <button onclick="addMeasurements()">Add Measurement</button>
+        <div id="add-response"></div>
+    </div>
+
+    <!-- Update Entire Collection -->
+    <div class="container">
+        <h2>Update Entire Collection of Measurements</h2>
+        <button onclick="updateMeasurements()">Reset Measurements</button>
+        <div id="update-response"></div>
+    </div>
+
+    <!-- Add Value to Specific Measurement -->
+    <div class="container">
+        <h2>Add Value to Specific Measurement</h2>
+        <label for="add-value-id">Measurement ID:</label>
+        <input type="text" id="add-value-id" placeholder="e.g. temperature">
+        <label for="add-value-date">Date (yyyy-mm-dd):</label>
+        <input type="text" id="add-value-date" placeholder="e.g. 2025-03-30">
+        <label for="add-value-value">Value:</label>
+        <input type="number" id="add-value-value" placeholder="e.g. 25.0">
+        <button onclick="addValueToCollection()">Add Value</button>
+        <div id="add-value-response"></div>
+    </div>
+
+    <!-- Update Specific Measurement -->
+    <div class="container">
+        <h2>Update Specific Measurement</h2>
+        <label for="update-id">Measurement ID:</label>
+        <input type="text" id="update-id" placeholder="e.g. temperature">
+        <label for="update-date">Date:</label>
+        <input type="text" id="update-date" placeholder="e.g. 2025-03-30">
+        <label for="update-value">New Value:</label>
+        <input type="number" id="update-value" placeholder="e.g. 26.5">
+        <button onclick="updateSpecificMeasurement()">Update Specific Measurement</button>
+        <div id="update-specific-response"></div>
+    </div>
+
+    <!-- Delete Specific Measurement -->
+    <div class="container">
+        <h2>Delete Specific Measurement</h2>
+        <label for="delete-id">Measurement ID:</label>
+        <input type="text" id="delete-id" placeholder="e.g. temperature">
+        <label for="delete-date">Date:</label>
+        <input type="text" id="delete-date" placeholder="e.g. 2025-03-30">
+        <button onclick="deleteMeasurement()">Delete Measurement</button>
+        <div id="delete-response"></div>
+    </div>
+
+    <!-- Delete All Measurements -->
+    <div class="container">
+        <h2>Delete All Measurements</h2>
+        <button onclick="deleteAllMeasurements()">Delete All Measurements</button>
+        <div id="delete-all-response"></div>
+    </div>
+
+    <script>
+        // Get All Measurements
+        function getMeasurements() {
+            fetch('/measurements')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('all-measurements').innerHTML = JSON.stringify(data, null, 2);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Get Specific Measurement
+        function getSpecificMeasurement() {
+            const id = document.getElementById('get-id').value;
+            const date = document.getElementById('get-date').value;
+            let url = `/measurements/${id}`;
+
+            // Dacă data este specificată, o adăugăm în URL
+            if (date) {
+                url += `?date=${date}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('specific-measurement').innerHTML = JSON.stringify(data, null, 2);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Add Measurement
+        function addMeasurements() {
+            const id = document.getElementById('add-measurements-id').value;
+            const value = document.getElementById('add-measurements-value').value;
+            const date = document.getElementById('add-measurements-date').value;
+
+            const data = [{
+                id: id,
+                value: value,
+                date: date
+            }];
+
+            fetch('/measurements', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('add-response').innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Update Measurements (reset to value 1)
+        function updateMeasurements() {
+            fetch('/measurements', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('update-response').innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Add Value to Collection
+        function addValueToCollection() {
+            const id = document.getElementById('add-value-id').value;
+            const date = document.getElementById('add-value-date').value;
+            const value = document.getElementById('add-value-value').value;
+
+            const data = {
+                date: date,
+                value: value
+            };
+
+            fetch(`/measurements/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('add-value-response').innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Update Specific Measurement
+        function updateSpecificMeasurement() {
+            const id = document.getElementById('update-id').value;
+            const date = document.getElementById('update-date').value;
+            const value = document.getElementById('update-value').value;
+
+            const data = {
+                value: value,
+                date: date
+            };
+
+            fetch(`/measurements/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('update-specific-response').innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Delete Measurement
+        function deleteMeasurement() {
+            const id = document.getElementById('delete-id').value;
+            const date = document.getElementById('delete-date').value;
+
+            const data = {
+                date: date
+            };
+
+            fetch(`/measurements/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('delete-response').innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Delete All Measurements
+        function deleteAllMeasurements() {
+            fetch('/measurements', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('delete-all-response').innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
